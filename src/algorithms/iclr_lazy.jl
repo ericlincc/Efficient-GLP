@@ -1,7 +1,3 @@
-# using LinearAlgebra
-# using SparseArrays
-
-
 # the problem to optimize
 #  \min_{\vx\in\gX\subset\sR^d} \max_{\vy\in\sR^n} \Big\{ L(\vx,\vy) = \vc^T\vx + r(\vx)   + \vy^T\mA\vx   - \vy^T\vb\Big\}.
 # op_X_r: (I + tau_n ∂G)^{-1}
@@ -58,7 +54,9 @@
 
 # TODO: Put blocks and C generation in utils
 
-function iclr_lazy(problem::StandardLinearProgram, exitcriterion::ExitCriterion, γ=1.0, σ=0.0, R=10, blocksize=10)  # TODO: What is γ and σ?
+function iclr_lazy(problem::StandardLinearProgram, exitcriterion::ExitCriterion; γ=1.0, σ=0.0, R=10, blocksize=10)  # TODO: What is γ and σ?
+    println("R = ", R)
+
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
 
@@ -112,7 +110,7 @@ function iclr_lazy(problem::StandardLinearProgram, exitcriterion::ExitCriterion,
         q_hat = q[C[j]] + (A[k] .- A[θ[C[j]]]) .* (z[C[j]] + c[C[j]])
 
         x_hat = prox(x0[C[j]] - 1/γ * q_hat, 1/γ * A[k])  # TODO: Check why not used
-        Delta_y = γ * m * a * ((x[C[j]]' * A_T[C[j], blocks[j]])' - b[blocks[j]])
+        Delta_y = γ * m * a * ((x_hat' * A_T[C[j], blocks[j]])' - b[blocks[j]])  # TODO: Sparse into x_hat and A_T
         y[blocks[j]] = y[blocks[j]] + Delta_y
         pre_a = a
         a = sqrt(1 + σ * A[k] / γ)/(R * m)
@@ -134,9 +132,10 @@ function iclr_lazy(problem::StandardLinearProgram, exitcriterion::ExitCriterion,
         if k % exitcriterion.loggingfreg == 0
 
             norm_const = norm(((x_tilde/A[k])' * A_T)' - b)
-            @info "k:$(k), ICLR constraint norm: $norm_const"
 
             elapsedtime = time() - starttime
+            @info "k: $(k), ICLR constraint norm: $norm_const, elapsedtime: $elapsedtime"
+
             logresult!(results, k, elapsedtime, norm_const)
 
             exitflag = checkexitcondition(exitcriterion, k, elapsedtime, norm_const)

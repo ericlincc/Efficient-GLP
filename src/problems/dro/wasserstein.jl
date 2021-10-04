@@ -10,7 +10,6 @@ function droreformuation_wmetric_hinge_standardformnormalized(
     v1_n_T = transpose(sparse(ones(num_dataset)))
     v1_d_T = transpose(sparse(ones(dim_dataset)))
     v0_n_T = transpose(spzeros(num_dataset))
-    v0_d_T = transpose(spzeros(dim_dataset))
 
     I_nn = sparse(I, num_dataset, num_dataset)
     I_dd = sparse(I, dim_dataset, dim_dataset)
@@ -31,20 +30,25 @@ function droreformuation_wmetric_hinge_standardformnormalized(
         -2*κ*v1_n_T v0_n_T    v0_n_T    v1_d_T   -v1_d_T;
         2*κ*v1_n_T v0_n_T    v0_n_T   -v1_d_T    v1_d_T;
     ]
-    b = [
-        zeros(num_dataset);
-        ones(num_dataset);
-        2 * ones(num_dataset);
-        zeros(dim_dataset);
-        zeros(dim_dataset);
-    ]
+    b = sparsevec([
+        spzeros(num_dataset);
+        sparse(ones(num_dataset));
+        2 * sparse(ones(num_dataset));
+        spzeros(dim_dataset);
+        spzeros(dim_dataset);
+    ])
 
     # Normalize all row norms of A to 1
-    rownorm_A = map(x -> norm(x), eachcol(A_T))
-    for i in 1:size(A_T)[2]
-        A_T[:, i] = A_T[:, i] / rownorm_A[i]
-        b[i] = b[i] / rownorm_A[i]
-    end
+    divrownorm_A = map(x -> 1 / norm(x), eachcol(A_T))
+    range_A = collect(1:A_T.n)
+    diag_divrownorm_A = sparse(range_A, range_A, divrownorm_A)
+    A_T *= diag_divrownorm_A
+    b = diag_divrownorm_A * b
+
+    # for i in 1:size(A_T)[2]
+    #     A_T[:, i] = A_T[:, i] / rownorm_A[i]
+    #     b[i] = b[i] / rownorm_A[i]
+    # end
 
     c = [
         1 / num_dataset * ones(num_dataset);

@@ -64,9 +64,10 @@ function pdhg(problem::StandardLinearProgram, exitcriterion::ExitCriterion; γ=0
 
         if k % exitcriterion.loggingfreg == 0
             norm_const = norm(((x_tilde / k)' * A_T)' - b)
-            @info "k:$(k), PDHG constraint norm: $norm_const"
 
             elapsedtime = time() - starttime
+            @info "k: $(k), PDHG constraint norm: $norm_const, elapsedtime: $elapsedtime"
+
             logresult!(results, k, elapsedtime, norm_const)
 
             exitflag = checkexitcondition(exitcriterion, k, elapsedtime, norm_const)
