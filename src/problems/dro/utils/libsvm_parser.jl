@@ -2,8 +2,8 @@
 
 function read_libsvm_into_yXT_sparse(filepath::String, dim_dataset::Int, num_dataset::Int)
     
-    train_index = Array{Int}([])
-    feature_index = Array{Int}([])
+    train_indices = Array{Int}([])
+    feature_indices = Array{Int}([])
     values = Array{Float64}([])
 
     open(filepath) do f
@@ -24,13 +24,13 @@ function read_libsvm_into_yXT_sparse(filepath::String, dim_dataset::Int, num_dat
                 index = parse(Int, _index)
                 value = label * parse(Float64, _value)  # value = b_i * x_{i j}
                 
-                push!(train_index, line)
-                push!(feature_index, index)
+                push!(train_indices, line)
+                push!(feature_indices, index)
                 push!(values, value)
             end        
             line += 1
         end
     end
 
-    yX_T = sparse(feature_index, train_index, values, dim_dataset, num_dataset)
+    yX_T = sparse(feature_indices, train_indices, values, dim_dataset, num_dataset)
 end
