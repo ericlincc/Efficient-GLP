@@ -65,7 +65,7 @@ with_logger(logger) do
         println("Running pdhg_restart_x_y.")
 
         # PDHG with Restarts
-        pdhg_L_multipler = 1.5
+        pdhg_L_multipler = 1.0
 
         r_pdhg_restart = pdhg_restart_x_y(problem, exitcriterion; L=pdhg_L_multipler * L)
         export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pdhg_restart_x_y-L$(pdhg_L_multipler * L).csv"
