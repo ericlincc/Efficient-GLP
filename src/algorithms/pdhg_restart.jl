@@ -41,15 +41,16 @@ function pdhg_restart_x_y(
             x_pre = deepcopy(x)
             x[:] = x[:]  - τ * (A_T * y[:] + c[:])
             x = prox(x, τ)
-            x_bar[:] = 2*x[:] -  x_pre[:]
+            # x_bar[:] = 2*x[:] -  x_pre[:]  # Correct term from original paper
+            x_bar[:] = x_bar[:] + (x[:] -  x_pre[:])  # Wrong term from CB
             x_tilde[:] = x_tilde[:] + x[:]
             y_tilde[:] = y_tilde[:] + y[:]
 
             # Logging and checking exit condition
             # set restartflag when reached some measure
             if k % exitcriterion.loggingfreq == 0
-                x_out = x_tilde / k
-                y_out = y_tilde / k
+                x_out = x_tilde / (k - 1)
+                y_out = y_tilde / (k - 1)
                 norm_const = norm((x_out' * A_T)' - b)
                 func_value = c' * x_out
 
@@ -65,6 +66,7 @@ function pdhg_restart_x_y(
 
                 if norm_const < 0.5 * init_norm_const
                     @info "<===== RESTARTING"
+                    @info "k: $(k)"
                     
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)
                     init_norm_const = norm_const
