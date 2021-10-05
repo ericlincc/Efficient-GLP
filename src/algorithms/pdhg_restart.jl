@@ -41,8 +41,8 @@ function pdhg_restart_x_y(
             x_pre = deepcopy(x)
             x[:] = x[:]  - τ * (A_T * y[:] + c[:])
             x = prox(x, τ)
-            # x_bar[:] = 2*x[:] -  x_pre[:]  # Correct term from original paper
-            x_bar[:] = x_bar[:] + (x[:] -  x_pre[:])  # Wrong term from CB
+            x_bar[:] = 2 * x[:] -  x_pre[:]  # Correct term from original paper
+            # x_bar[:] = x_bar[:] + (x[:] -  x_pre[:])  # Wrong term from CB
             x_tilde[:] = x_tilde[:] + x[:]
             y_tilde[:] = y_tilde[:] + y[:]
 

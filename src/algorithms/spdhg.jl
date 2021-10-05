@@ -37,6 +37,8 @@
 # # blocks: the separation of dual variables
 # # R: row norm
 
+
+# TODO: THIS IS UNTESTED
 function spdhg(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
