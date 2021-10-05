@@ -112,7 +112,7 @@ function iclr_lazy_restart_x_y(
                 elapsedtime = time() - starttime
                 @info "elapsedtime: $elapsedtime"
                 @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
-                logresult!(results, k, elapsedtime, func_value, norm_const)
+                logresult!(results, outer_k, elapsedtime, func_value, norm_const)
 
                 exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, norm_const)
                 if exitflag

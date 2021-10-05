@@ -23,7 +23,7 @@ function iclr_lazy(
 
     _time1 = time()
     # Precomputing blocks, nzrows, sliced_A_T
-    blocks, C = compute_nnrows_for_blocks(A_T, blocksize)
+    blocks, C = compute_nzrows_for_blocks(A_T, blocksize)
     sliced_A_Ts = Array{SparseMatrixCSC{Float64, Int}}([])
     for j in 1:length(C)
         push!(sliced_A_Ts, A_T[C[j], blocks[j]])
@@ -111,7 +111,7 @@ function iclr_lazy(
             func_value = c' * x_out
             elapsedtime = time() - starttime
             @info "elapsedtime: $elapsedtime"
-            @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
+            @info "d: $(d), constraint norm: $norm_const, func value: $func_value"
             logresult!(results, k, elapsedtime, func_value, norm_const)
 
             exitflag = checkexitcondition(exitcriterion, k, elapsedtime, norm_const)
