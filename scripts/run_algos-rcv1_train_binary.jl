@@ -20,10 +20,10 @@ include("../src/algorithms/spdhg_restart.jl")
 
 
 outputdir = "./run_results/"  # TODO: As input argument
-filepath = "./data/a9a.txt"      ####################################################
-dataset = "a9a"      ####################################################
-dim_dataset = 123      ####################################################
-num_dataset = 32561      ####################################################
+filepath = "./data/rcv1_train.binary.txt"   ####################################################
+dataset = "rcv1_train_binary"   ####################################################
+dim_dataset = 47236    ####################################################
+num_dataset = 20242     ####################################################
 
 timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS")
 loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-execution_log.txt"
@@ -37,7 +37,7 @@ with_logger(logger) do
 
     problem = StandardLinearProgram(A_T, b, c)
     exitcriterion = ExitCriterion(1e12, 3600., 1e-5, 5)
-    L = 161.8  # TODO: This is a hard constant     ####################################################
+    L = 232.35  # TODO: This is a hard constant  ####################################################
 
     @info "A_T has size: $(size(A_T))"
     @info "A_T has nnz: $(size(findnz(A_T)[1])[1]))"
