@@ -120,7 +120,7 @@ function iclr_lazy_restart_x_y(
                 end
 
                 if norm_const < 0.5 * init_norm_const
-                    @info "restarting"
+                    @info "<===== RESTARTING"
                     @info "k ÷ m: $(k ÷ m)"
                     
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)

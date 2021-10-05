@@ -11,6 +11,7 @@
 # TODO: Update the above comments
 
 
+# TODO: CB SAID THIS VERSION IS WRONG
 function pdhg(problem::StandardLinearProgram, exitcriterion::ExitCriterion; γ=0.0, L=100.0)
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
