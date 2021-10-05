@@ -2,7 +2,7 @@ struct ExitCriterion
     maxiter::Int              # Max #iterations allowed
     maxtime::Float64          # Max execution time allowed
     targetaccuracy::Float64   # Target accuracy to halt algorithm
-    loggingfreg::Int          # #iterations interval between logging
+    loggingfreq::Int          # #datapass between logging
 end
 
 

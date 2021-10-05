@@ -12,7 +12,7 @@ function compute_nzrows_for_blocks(A_T::SparseMatrixCSC, blocksize::Int)
         else
             push!(blocks, (1 + (i-1) * blocksize): (i * blocksize))
         end
-        
+
         row_set = Set{Int}()
         for j in blocks[i]
             loc = A_T.colptr[j]:(A_T.colptr[j+1]-1)
@@ -23,4 +23,15 @@ function compute_nzrows_for_blocks(A_T::SparseMatrixCSC, blocksize::Int)
     end
 
     blocks, C
+end
+
+function exportresultstoCSV(results::Results, outputfile::String)
+    CSV.write(
+        outputfile, (
+            iterations = results.iterations,
+            times = results.times,
+            fvalues = results.fvalues,
+            constraintnorms = results.constraintnorms
+        )
+    )
 end

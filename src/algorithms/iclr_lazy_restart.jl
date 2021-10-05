@@ -4,6 +4,8 @@ function iclr_lazy_restart_x_y(
     exitcriterion::ExitCriterion;
     γ=1.0, σ=0.0, R=10, blocksize=10)
 
+    @info("Running iclr_lazy_restart_x_y...")
+
     # Algorithm 2 from the paper
 
     A_T, b, c = problem.A_T, problem.b, problem.c
@@ -25,14 +27,14 @@ function iclr_lazy_restart_x_y(
 
     ##### Start of iclr_lazy_restart_x_y
 
-    K = exitcriterion.maxiter  #
     m = length(blocks)
 
     # Log initial measure
     starttime = time()
     results = Results()
     init_norm_const = norm((x0' * A_T)' - b)
-    logresult!(results, 1, 0.0, init_norm_const)
+    init_fvalue = c' * x0
+    logresult!(results, 1, 0.0, init_fvalue, init_norm_const)
 
     outer_k = 2
     exitflag = false
@@ -87,7 +89,7 @@ function iclr_lazy_restart_x_y(
             # Line 11
             x_tilde[C[j]] = x_tilde[C[j]] + a * (k .- θ_x[C[j]]) .* x[C[j]]
 
-            # Line 9  TODO: Check with CB about the ordering
+            # Line 9
             z[C[j]] = z[C[j]] + Delta_Delta_y
 
             # Line 13
@@ -97,40 +99,29 @@ function iclr_lazy_restart_x_y(
             θ_x[C[j]] .= k
             θ_y[blocks[j]] .= k
 
-            # TODO: Check restart and log per data pass
             # Logging and checking exit condition
-            if outer_k % exitcriterion.loggingfreg == 0
-                x_tilde_tmp = x_tilde[:] + a * (k .- θ_x[:]) .* x[:]
-                x_out = x_tilde_tmp / (k * a)
-                norm_const = norm((x_out' * A_T)' - b)
-                func_value = c' * x_out
-
-                elapsedtime = time() - starttime
-                @info "outer_k: $(outer_k), ICLR constraint norm: $norm_const, elapsedtime: $elapsedtime"
-                @info "outer_k: $(outer_k), ICLR func value: $func_value, elapsedtime: $elapsedtime"
-
-                logresult!(results, outer_k, elapsedtime, norm_const)
-    
-                exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, norm_const)
-                if exitflag
-                    break
-                end
-            end
-
             # set restartflag when reached some measure
-            if k % (2 * m) == 0
+            if k % (exitcriterion.loggingfreq * m) == 0
                 x_tilde_tmp = x_tilde[:] + a * (k .- θ_x[:]) .* x[:]
                 y_tilde_tmp = y_tilde[:] + a * (k .- θ_y[:]) .* y[:]
                 x_out = x_tilde_tmp / (a * k)
                 y_out = y_tilde_tmp / (a * k)
                 norm_const = norm((x_out' * A_T)' - b)
+                func_value = c' * x_out
+
+                elapsedtime = time() - starttime
+                @info "elapsedtime: $elapsedtime"
+                @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
+                logresult!(results, k, elapsedtime, func_value, norm_const)
+
+                exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, norm_const)
+                if exitflag
+                    break
+                end
 
                 if norm_const < 0.5 * init_norm_const
-                    func_value = c' * x_out
                     @info "restarting"
                     @info "k ÷ m: $(k ÷ m)"
-                    @info "norm_const: " norm_const
-                    @info "func value: $func_value"
                     
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)
                     init_norm_const = norm_const
