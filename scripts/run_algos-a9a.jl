@@ -34,7 +34,7 @@ with_logger(logger) do
     A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, 1.0, 0.1)
 
     problem = StandardLinearProgram(A_T, b, c)
-    exitcriterion = ExitCriterion(1e12, 3600., 1e2, 5) ####################################################
+    exitcriterion = ExitCriterion(1e12, 3600., 1e-5, 5) ####################################################
     L = 117.28  # TODO: This is a hard constant
 
     @info "A_T has size: $(size(A_T))"
