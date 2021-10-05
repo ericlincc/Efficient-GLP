@@ -1,10 +1,10 @@
 
-function pure_cd_restart_x_y(
+function spdhg_restart_x_y(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
-    γ=1.0, σ=0.0, R=10, blocksize=10)
+    R=10, blocksize=10)
 
-    @info("Running pure_cd_restart_x_y...")
+    @info("Running spdhg_restart_x_y...")
 
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
@@ -12,6 +12,7 @@ function pure_cd_restart_x_y(
     d, n = size(A_T)
     x0 = zeros(d)
     y0 = zeros(n)
+    grad = zero(x0)
 
     _time1 = time()
     # Precomputing blocks, nzrows, sliced_A_T
@@ -23,7 +24,7 @@ function pure_cd_restart_x_y(
     _time2 = time()
     @info ("Initialization time = ", _time2 - _time1)
 
-    ##### Start of PURE_CD
+    ##### Start of spdhg_restart_x_y
 
     m = length(blocks)
 
@@ -38,7 +39,7 @@ function pure_cd_restart_x_y(
     exitflag = false
 
     while !exitflag
-        # Init of PURE_CD
+        # Init of SPDHG
         τ, σ =  1.0 / (R * m), 1.0 / R
         idx_seq = 1:m
 
@@ -48,37 +49,39 @@ function pure_cd_restart_x_y(
         y_tilde = zero(y0)
 
         z = A_T * y
-        θ_x = ones(Int, length(x0))
         θ_y = ones(Int, length(y0))
 
         k = 2
         restartflag = false
         while !exitflag && !restartflag
+
+            x[:] = x[:] - τ * (grad[:] + c[:])
+            x = prox(x, τ)
             j = rand(idx_seq)
-
-            x_bar = x[C[j]] - τ * (z[C[j]] + c[C[j]])
-            x_bar = prox(x_bar, τ)
-
             sliced_A_T = sliced_A_Ts[j]
-            Delta_y = -y[blocks[j]]
-            y_tilde[blocks[j]] = y_tilde[blocks[j]] + τ * (k .- θ_y[blocks[j]]) .* y[blocks[j]]
-            y[blocks[j]] = y[blocks[j]] + σ * ((x_bar' * sliced_A_T)' - b[blocks[j]])
-            Delta_y += y[blocks[j]]
-            y_tilde[blocks[j]] = y_tilde[blocks[j]] + (m-1) * τ * Delta_y[:]
-            tmp = sliced_A_T * Delta_y
-            z[C[j]] = z[C[j]] + tmp
-            x_tilde[C[j]] = x_tilde[C[j]] + τ * (k .- θ_x[C[j]]) .* x[C[j]]
-            x[C[j]] = x_bar - τ * m * tmp
 
-            θ_x[C[j]] .= k
+            y_tilde[blocks[j]] = y_tilde[blocks[j]] + τ * (k .- θ_y[blocks[j]]) .* y[blocks[j]]
+
+            Delta_y = -y[blocks[j]]
+
+            y[blocks[j]] = y[blocks[j]] + σ * ((x[C[j]]' * sliced_A_T)' - b[blocks[j]])
+            Delta_y += y[blocks[j]]
+
+            y_tilde[blocks[j]] = y_tilde[blocks[j]] + (m-1) * τ * Delta_y[:]
+
+            tmp = sliced_A_T * Delta_y
+            z[C[j]] = z[C[j]] + tmp[:]
+            grad[:] = z[:]
+            grad[C[j]] = grad[C[j]]  + m * tmp[:]
+
+            x_tilde[:] = x_tilde[:] + x[:]
             θ_y[blocks[j]] .= k
 
             # Logging and checking exit condition
             # set restartflag when reached some measure
             if outer_k % (exitcriterion.loggingfreq * m) == 0
-                x_tilde_tmp = x_tilde[:] + τ * (k .- θ_x[:]) .* x[:]
                 y_tilde_tmp = y_tilde[:] + τ * (k .- θ_y[:]) .* y[:]
-                x_out = x_tilde_tmp / (τ * k)
+                x_out = x_tilde / k
                 y_out = y_tilde_tmp / (τ * k)
                 norm_const = norm((x_out' * A_T)' - b)
                 func_value = c' * x_out

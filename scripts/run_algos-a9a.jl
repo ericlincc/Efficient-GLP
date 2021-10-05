@@ -33,8 +33,7 @@ with_logger(logger) do
     A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, 1.0, 0.1)
 
     problem = StandardLinearProgram(A_T, b, c)
-    # exitcriterion = ExitCriterion(1e12, 3600., 1e-5, 5)
-    exitcriterion = ExitCriterion(1e12, 3600., 100, 5)
+    exitcriterion = ExitCriterion(1e12, 3600., 1e-5, 5)
 
     @info "A_T has size: $(size(A_T))"
     @info "A_T has nnz: $(size(findnz(A_T)[1])[1]))"

@@ -101,7 +101,7 @@ function iclr_lazy_restart_x_y(
 
             # Logging and checking exit condition
             # set restartflag when reached some measure
-            if k % (exitcriterion.loggingfreq * m) == 0
+            if outer_k % (exitcriterion.loggingfreq * m) == 0
                 x_tilde_tmp = x_tilde[:] + a * (k .- θ_x[:]) .* x[:]
                 y_tilde_tmp = y_tilde[:] + a * (k .- θ_y[:]) .* y[:]
                 x_out = x_tilde_tmp / (a * k)

@@ -3,7 +3,7 @@ function pdhg_restart_x_y(
     exitcriterion::ExitCriterion;
     L=10)
 
-    # Algorithm 2 from the paper
+    @info("Running pdhg_restart_x_y...")
 
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
@@ -48,7 +48,7 @@ function pdhg_restart_x_y(
 
             # Logging and checking exit condition
             # set restartflag when reached some measure
-            if k % exitcriterion.loggingfreq == 0
+            if outer_k % exitcriterion.loggingfreq == 0
                 x_out = x_tilde / (k - 1)
                 y_out = y_tilde / (k - 1)
                 norm_const = norm((x_out' * A_T)' - b)
