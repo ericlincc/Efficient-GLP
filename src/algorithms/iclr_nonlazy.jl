@@ -1,5 +1,5 @@
 
-function iclr(
+function iclr_nonlazy(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
     γ=1.0, σ=0.0, R=10, blocksize=10)

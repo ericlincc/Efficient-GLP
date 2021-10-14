@@ -17,13 +17,14 @@ include("../src/algorithms/iclr_lazy_restart.jl")
 include("../src/algorithms/pure_cd_restart.jl")
 include("../src/algorithms/pdhg_restart.jl")
 include("../src/algorithms/spdhg_restart.jl")
+include("../src/algorithms/iclr_nonlazy.jl")
 
 
 outputdir = "./run_results/"  # TODO: As input argument
-filepath = "./data/a9a.txt"      ####################################################
-dataset = "a9a"      ####################################################
+filepath = "./data/a1a.txt"      ####################################################
+dataset = "a1a"      ####################################################
 dim_dataset = 123      ####################################################
-num_dataset = 32561      ####################################################
+num_dataset = 1605      ####################################################
 
 timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS")
 loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-execution_log.txt"
@@ -36,8 +37,8 @@ with_logger(logger) do
     A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, 1.0, 0.1)
 
     problem = StandardLinearProgram(A_T, b, c)
-    exitcriterion = ExitCriterion(1e12, 3600., 1e-5, 5)
-    L = 161.8  # TODO: This is a hard constant     ####################################################
+    exitcriterion = ExitCriterion(1e12, 24 * 3600., 1e-5, 5)
+    L = 37.2  # TODO: This is a hard constant     ####################################################
 
     @info "A_T has size: $(size(A_T))"
     @info "A_T has nnz: $(size(findnz(A_T)[1])[1]))"
@@ -100,8 +101,24 @@ with_logger(logger) do
         purecd_R = sqrt(purecd_blocksize)
 
         r_pure_cd_restart = pure_cd_restart_x_y(problem, exitcriterion; blocksize=purecd_blocksize, R=purecd_R)
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pure_cd_restart_x_y-blocksize$(purecd_blocksize)-R(purecd_R).csv"
+        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pure_cd_restart_x_y-blocksize$(purecd_blocksize)-R$(purecd_R).csv"
         exportresultstoCSV(r_pure_cd_restart, export_filename)
+
+        println("========================================")
+    end
+
+
+    if "5" in ARGS
+        println("========================================")
+        println("Running iclr_nonlazy.")
+
+        # ICLR Nonlazy
+        iclr_nonlazy_blocksize = 5
+        iclr_nonlazy_R = sqrt(iclr_nonlazy_blocksize)
+
+        r_iclr_nonlazy = iclr_nonlazy(problem, exitcriterion; blocksize=iclr_nonlazy_blocksize, R=iclr_nonlazy_R)
+        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-iclr_nonlazy-blocksize$(iclr_nonlazy_blocksize)-R$(iclr_nonlazy_R).csv"
+        exportresultstoCSV(r_iclr_nonlazy, export_filename)
 
         println("========================================")
     end

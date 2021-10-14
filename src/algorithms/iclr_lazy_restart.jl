@@ -45,13 +45,12 @@ function iclr_lazy_restart_x_y(
         pre_a = a
         idx_seq = 1:m
 
-        q = zero(x0)
         x = deepcopy(x0)
         y = deepcopy(y0)
         x_tilde = zero(x0)
         y_tilde = zero(y0)
-
         z = A_T * y + c
+        q = a * deepcopy(z)
         θ_x = ones(Int, length(x0))
         θ_y = ones(Int, length(y0))
 
@@ -64,7 +63,7 @@ function iclr_lazy_restart_x_y(
             # Slice of variables based on nzrowsC[j]
             z_sliced = z[C[j]]
             q_sliced = q[C[j]]
-            Adelta_sliced = a * (k .- θ_x[C[j]])
+            Adelta_sliced = a * ((k-1) .- θ_x[C[j]])
 
             # Line 5
             q_hat = q_sliced + Adelta_sliced .* z_sliced
@@ -78,13 +77,13 @@ function iclr_lazy_restart_x_y(
             y_tilde[blocks[j]] = y_tilde[blocks[j]] + a * (k .- θ_y[blocks[j]]) .* y[blocks[j]]
             y_tilde[blocks[j]] = y_tilde[blocks[j]] + (m-1) * a * Delta_y[:]
             y[blocks[j]] = y[blocks[j]] + Delta_y
-            
+
             # Line 8
             pre_a = a
 
             # Line 10
             Delta_Delta_y = sliced_A_T * Delta_y
-            q[C[j]] = q_sliced + Adelta_sliced .* z_sliced + (a + m * pre_a) * Delta_Delta_y
+            q[C[j]] = q_sliced + a * (k .- θ_x[C[j]]) .* z_sliced + (a + m * pre_a) * Delta_Delta_y
 
             # Line 11
             x_tilde[C[j]] = x_tilde[C[j]] + a * (k .- θ_x[C[j]]) .* x[C[j]]
@@ -102,16 +101,16 @@ function iclr_lazy_restart_x_y(
             # Logging and checking exit condition
             # set restartflag when reached some measure
             if outer_k % (exitcriterion.loggingfreq * m) == 0
-                x_tilde_tmp = x_tilde[:] + a * (k .- θ_x[:]) .* x[:]
-                y_tilde_tmp = y_tilde[:] + a * (k .- θ_y[:]) .* y[:]
-                x_out = x_tilde_tmp / (a * k)
-                y_out = y_tilde_tmp / (a * k)
+                x_tilde_tmp = x_tilde[:] + a * ((k+1) .- θ_x[:]) .* x[:]
+                y_tilde_tmp = y_tilde[:] + a * ((k+1) .- θ_y[:]) .* y[:]
+                x_out = x_tilde_tmp / (a * (k-1))
+                y_out = y_tilde_tmp / (a * (k-1))
                 norm_const = norm((x_out' * A_T)' - b)
                 func_value = c' * x_out
 
                 elapsedtime = time() - starttime
-                @info "elapsedtime: $elapsedtime"
-                @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
+                # @info "elapsedtime: $elapsedtime"
+                # @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
                 logresult!(results, outer_k, elapsedtime, func_value, norm_const)
 
                 exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, norm_const)
@@ -122,7 +121,9 @@ function iclr_lazy_restart_x_y(
                 if norm_const < 0.5 * init_norm_const
                     @info "<===== RESTARTING"
                     @info "k ÷ m: $(k ÷ m)"
-                    
+                    @info "elapsedtime: $elapsedtime"
+                    @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
+
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)
                     init_norm_const = norm_const
                     restartflag = true
