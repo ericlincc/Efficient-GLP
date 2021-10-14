@@ -20,7 +20,7 @@ function iclr_nonlazy(
 
     ##### Start of iclr #####
 
-    # Init of ICLR
+    # Init of ICLR_Nonlazy
 
     m = length(blocks)
     a = 1 / (R * m)
@@ -47,14 +47,24 @@ function iclr_nonlazy(
 
     # Start iterations
     while !exitflag
+
+        # Line 4
         x[:] = x0[:] - 1.0/γ * q[:]
         x = prox(x, 1.0/γ * A)
+
+        # Line 5
         j = rand(idx_seq)
-        Delta_y = γ * m * a * ((x'*A_T[:, blocks[j]])' - b[blocks[j]])
+
+        # Line 6
+        Delta_y = γ * m * a * ((x' * A_T[:, blocks[j]])' - b[blocks[j]])
         y[blocks[j]] = y[blocks[j]] + Delta_y
+
+        # Line 7
         pre_a, pre_A = a, A
         a = sqrt(1 + σ * A / γ)/(R * m)
         A = A + a
+
+        # Line 8 & 9
         Delta_Delta_y = A_T[:, blocks[j]] * Delta_y
         z[:] = z[:] + Delta_Delta_y
         q[:] = q[:] + a * (z + c) + m * pre_a * Delta_Delta_y
