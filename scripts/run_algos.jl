@@ -17,9 +17,8 @@ include("../src/problems/dro/wasserstein.jl")
 
 include("../src/algorithms/iclr_lazy_restart.jl")
 include("../src/algorithms/pdhg_restart.jl")
-# include("../src/algorithms/pure_cd_restart.jl")
-# include("../src/algorithms/spdhg_restart.jl")
-# include("../src/algorithms/iclr_nonlazy.jl")
+include("../src/algorithms/purecd_restart.jl")
+include("../src/algorithms/spdhg_restart.jl")
 
 
 DATASET_INFO = Dict([
@@ -67,6 +66,7 @@ loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-execution_log.txt"
 io = open(loggingfilename, "w+")
 logger = SimpleLogger(io)
 
+println("timestamp = $(timestamp)")
 println("Completed initialization.")
 
 with_logger(logger) do
@@ -96,6 +96,7 @@ with_logger(logger) do
         println("Running iclr_lazy_restart_x_y.")
 
         iclr_R_multiplier = 0.9
+        println("iclr_R_multiplier = $(iclr_R_multiplier)")
 
         r_iclr_lazy_restart = iclr_lazy_restart_x_y(
             problem,
@@ -118,6 +119,7 @@ with_logger(logger) do
         println("Running pdhg_restart_x_y.")
 
         pdhg_L_multiplier = 0.9
+        println("pdhg_L_multiplier = $(pdhg_L_multiplier)")
 
         r_pdhg_restart = pdhg_restart_x_y(
             problem,
@@ -129,6 +131,52 @@ with_logger(logger) do
 
         export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pdhg_restart_x_y.csv"
         exportresultstoCSV(r_pdhg_restart, export_filename)
+
+        println("========================================")
+    end
+
+
+    if "3" in ARGS[2:end]  # TODO: Use algo names instead
+        println("========================================")
+        println("Running spdhg_restart_x_y.")
+
+        spdhg_R_multiplier = 0.9
+        println("spdhg_R_multiplier = $(spdhg_R_multiplier)")
+
+        r_spdhg_restart = spdhg_restart_x_y(
+            problem,
+            exitcriterion;
+            blocksize=blocksize,
+            R=R * spdhg_R_multiplier,
+            γ=γ,
+            restartfreq=restartfreq
+        )
+
+        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-spdhg_restart_x_y.csv"
+        exportresultstoCSV(r_spdhg_restart, export_filename)
+
+        println("========================================")
+    end
+
+
+    if "4" in ARGS[2:end]  # TODO: Use algo names instead
+        println("========================================")
+        println("Running purecd_restart_x_y.")
+
+        purecd_R_multiplier = 5.0
+        println("purecd_R_multiplier = $(purecd_R_multiplier)")
+
+        r_purecd_restart = purecd_restart_x_y(
+            problem,
+            exitcriterion;
+            blocksize=blocksize,
+            R=R * purecd_R_multiplier,
+            γ=γ,
+            restartfreq=restartfreq
+        )
+
+        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-purecd_restart_x_y.csv"
+        exportresultstoCSV(r_purecd_restart, export_filename)
 
         println("========================================")
     end
