@@ -1,6 +1,8 @@
 # File containing helper functions for algorithms.
 
 function compute_nzrows_for_blocks(A_T::SparseMatrixCSC, blocksize::Int)
+    # Compute the nonzero rows in A_T for each block.
+
     d, n = size(A_T)
 
     blocks = Array{UnitRange{Int}}([])
@@ -25,13 +27,31 @@ function compute_nzrows_for_blocks(A_T::SparseMatrixCSC, blocksize::Int)
     blocks, C
 end
 
+
 function exportresultstoCSV(results::Results, outputfile::String)
+    # Export results into CSV formatted file.
+
     CSV.write(
         outputfile, (
             iterations = results.iterations,
             times = results.times,
-            fvalues = results.fvalues,
-            constraintnorms = results.constraintnorms
+            fvaluegaps = results.fvaluegaps,
+            metricLPs = results.metricLPs
         )
     )
+end
+
+
+function compute_fvaluegap_metricLP(x_out::Vector, y_out::Vector, problem::StandardLinearProgram)
+    # Computing a common metric for LP. See Eqn (20) in Applegate et al 2020.
+
+    A_T, b, c = problem.A_T, problem.b, problem.c
+
+    norm1 = norm(max.(-x_out, 0))
+    norm2 = norm(max.((x_out' * A_T)' - b, 0))
+    norm3 = norm(max.(-(x_out' * A_T)' + b, 0))  # TODO: Can combine with norm2
+    norm4 = norm(max.(-A_T * y_out - c, 0))
+    norm5 = norm(c' * x_out + b' * y_out)
+    
+    norm5, sqrt(norm1^2 + norm2^2 + norm3^2 + norm4^2 + norm5^2)
 end

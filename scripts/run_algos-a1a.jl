@@ -1,3 +1,4 @@
+using Arpack
 using CSV
 using Dates
 using LinearAlgebra
@@ -13,114 +14,122 @@ include("../src/algorithms/utils/helper.jl")
 include("../src/algorithms/iclr_lazy.jl")
 include("../src/problems/dro/utils/libsvm_parser.jl")
 include("../src/problems/dro/wasserstein.jl")
+
 include("../src/algorithms/iclr_lazy_restart.jl")
-include("../src/algorithms/pure_cd_restart.jl")
 include("../src/algorithms/pdhg_restart.jl")
-include("../src/algorithms/spdhg_restart.jl")
-include("../src/algorithms/iclr_nonlazy.jl")
+# include("../src/algorithms/pure_cd_restart.jl")
+# include("../src/algorithms/spdhg_restart.jl")
+# include("../src/algorithms/iclr_nonlazy.jl")
 
 
-outputdir = "./run_results/"  # TODO: As input argument
-filepath = "./data/a1a.txt"      ####################################################
-dataset = "a1a"      ####################################################
-dim_dataset = 123      ####################################################
-num_dataset = 1605      ####################################################
+DATASET_INFO = Dict([
+    ("a1a", (123, 1605)),
+    ("a9a", (123, 32561)),
+    ("gisette", (5000, 6000)),
+    ("news20", (1355191, 19996)),
+    ("rcv1", (47236, 20242)),
+])
+
+# Dataset parameters
+outputdir = "./run_results/"
+dataset = ARGS[1]
+if !haskey(DATASET_INFO, dataset)
+    throw(ArgumentError("Invalid dataset name supplied."))
+end
+dim_dataset, num_dataset = DATASET_INFO[dataset]
+filepath = "./data/$(dataset).txt"
+
+# Problem instance parameters
+κ = 0.1
+ρ = 0.1
+
+# Problem instance instantiation
+yX_T = read_libsvm_into_yXT_sparse(filepath, dim_dataset, num_dataset)
+A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, 1.0, 0.1)
+problem = StandardLinearProgram(A_T, b, c)
+L = svds(A_T, nsv = 1)[1].S[1]
+
+# Exit criterion
+maxiter = 1e12
+maxtime = 3600.
+targetaccuracy = 1
+loggingfreq = 5
+exitcriterion = ExitCriterion(maxiter, maxtime, targetaccuracy, loggingfreq)
+
+# Common algo parameters
+blocksize = 50
+R = sqrt(blocksize)
+γ = 0.0001
+restartfreq = Inf  # For restart when metric halves, set restartfreq=Inf 
 
 timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS")
 loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-execution_log.txt"
 io = open(loggingfilename, "w+")
 logger = SimpleLogger(io)
 
+println("Completed initialization.")
+
 with_logger(logger) do
 
-    yX_T = read_libsvm_into_yXT_sparse(filepath, dim_dataset, num_dataset)
-    A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, 1.0, 0.1)
-
-    problem = StandardLinearProgram(A_T, b, c)
-    exitcriterion = ExitCriterion(1e12, 24 * 3600., 1e-5, 5)
-    L = 37.2  # TODO: This is a hard constant     ####################################################
-
+    @info "Running on $(dataset) dataset."
+    @info "--------------------------------------------------"
+    @info "κ = $(κ)"
+    @info "ρ = $(ρ)"
+    @info "--------------------------------------------------"
     @info "A_T has size: $(size(A_T))"
     @info "A_T has nnz: $(size(findnz(A_T)[1])[1]))"
     @info "nnz ratio: $(size(findnz(A_T)[1])[1] / (size(A_T)[1] * size(A_T)[2])))"
+    @info "L = $(L)"
+    @info "--------------------------------------------------"
+    @info "maxiter = $(maxiter)"
+    @info "maxtime = $(maxtime)"
+    @info "targetaccuracy = $(targetaccuracy)"
+    @info "loggingfreq = $(loggingfreq)"
+    @info "--------------------------------------------------"
+    @info "blocksize = $(blocksize)"
+    @info "R = $(R)"
+    @info "γ = $(γ)"
+    @info "restartfreq = $(restartfreq)"
 
-
-    if "1" in ARGS  # TODO: Use algo names instead
+    if "1" in ARGS[2:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running iclr_lazy_restart_x_y.")
 
-        # ICLR Lazy with Restarts
-        iclr_blocksize = 5
-        iclr_R = sqrt(iclr_blocksize)
+        iclr_R_multiplier = 0.9
 
-        r_iclr_lazy_restart = iclr_lazy_restart_x_y(problem, exitcriterion; blocksize=iclr_blocksize, R=sqrt(iclr_R))
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-iclr_lazy_restart_x_y-blocksize$(iclr_blocksize)-R$(iclr_R).csv"
+        r_iclr_lazy_restart = iclr_lazy_restart_x_y(
+            problem,
+            exitcriterion;
+            blocksize=blocksize,
+            R=R * iclr_R_multiplier,
+            γ=γ,
+            restartfreq=restartfreq
+        )
+
+        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-iclr_lazy_restart_x_y.csv"
         exportresultstoCSV(r_iclr_lazy_restart, export_filename)
 
         println("========================================")
     end
 
 
-    if "2" in ARGS
+    if "2" in ARGS[2:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running pdhg_restart_x_y.")
 
-        # PDHG with Restarts
-        pdhg_L_multipler = 1.0
+        pdhg_L_multiplier = 0.9
 
-        r_pdhg_restart = pdhg_restart_x_y(problem, exitcriterion; L=pdhg_L_multipler * L)
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pdhg_restart_x_y-L$(pdhg_L_multipler * L).csv"
+        r_pdhg_restart = pdhg_restart_x_y(
+            problem,
+            exitcriterion;
+            L=L * pdhg_L_multiplier,
+            γ=γ,
+            restartfreq=restartfreq,
+        )
+
+        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pdhg_restart_x_y.csv"
         exportresultstoCSV(r_pdhg_restart, export_filename)
 
         println("========================================")
     end
-
-
-    if "3" in ARGS
-        println("========================================")
-        println("Running spdhg_restart_x_y.")
-
-        # SPDHG with Restarts
-        spdhg_blocksize = 100
-        spdhg_R = sqrt(spdhg_blocksize)
-
-        r_spdhg_restart = spdhg_restart_x_y(problem, exitcriterion; blocksize=spdhg_blocksize, R=spdhg_R)
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-spdhg_restart_x_y-blocksize$(spdhg_blocksize)-R$(spdhg_R).csv"
-        exportresultstoCSV(r_spdhg_restart, export_filename)
-        
-        println("========================================")
-    end
-
-
-    if "4" in ARGS
-        println("========================================")
-        println("Running pure_cd_restart_x_y.")
-
-        # PURE_CD with Restarts
-        purecd_blocksize = 5
-        purecd_R = sqrt(purecd_blocksize)
-
-        r_pure_cd_restart = pure_cd_restart_x_y(problem, exitcriterion; blocksize=purecd_blocksize, R=purecd_R)
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pure_cd_restart_x_y-blocksize$(purecd_blocksize)-R$(purecd_R).csv"
-        exportresultstoCSV(r_pure_cd_restart, export_filename)
-
-        println("========================================")
-    end
-
-
-    if "5" in ARGS
-        println("========================================")
-        println("Running iclr_nonlazy.")
-
-        # ICLR Nonlazy
-        iclr_nonlazy_blocksize = 5
-        iclr_nonlazy_R = sqrt(iclr_nonlazy_blocksize)
-
-        r_iclr_nonlazy = iclr_nonlazy(problem, exitcriterion; blocksize=iclr_nonlazy_blocksize, R=iclr_nonlazy_R)
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-iclr_nonlazy-blocksize$(iclr_nonlazy_blocksize)-R$(iclr_nonlazy_R).csv"
-        exportresultstoCSV(r_iclr_nonlazy, export_filename)
-
-        println("========================================")
-    end
-
 end

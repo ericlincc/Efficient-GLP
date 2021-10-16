@@ -1,18 +1,18 @@
 struct Results
-    iterations::Vector
-    times::Vector
-    fvalues::Vector
-    constraintnorms::Vector
+    iterations::Vector{Float64}
+    times::Vector{Float64}
+    fvaluegaps::Vector{Float64}
+    metricLPs::Vector{Float64}
     
     function Results()
-        new(Array{Int}([]), Array{Float64}([]), Array{Float64}([]), Array{Float64}([]))
+        new(Array{Int64}([]), Array{Float64}([]), Array{Float64}([]), Array{Float64}([]))
     end
 end
 
-function logresult!(r::Results, currentiter, elapsedtime, fvalue, constraintnorm)
+function logresult!(r::Results, currentiter, elapsedtime, fvaluegap, metricLP)
     push!(r.iterations, currentiter)
     push!(r.times, elapsedtime)
-    push!(r.fvalues, fvalue)
-    push!(r.constraintnorms, constraintnorm)
+    push!(r.fvaluegaps, fvaluegap)
+    push!(r.metricLPs, metricLP)
     return
 end

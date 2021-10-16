@@ -2,9 +2,14 @@
 function iclr_lazy_restart_x_y(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
-    γ=1.0, σ=0.0, R=10, blocksize=10)
+    γ=1.0, σ=0.0, R=10, blocksize=10, restartfreq=Inf)
 
-    @info("Running iclr_lazy_restart_x_y...")
+    @info("Running iclr_lazy_restart_x_y with")
+    @info("blocksize = $(blocksize)")
+    @info("γ = $(γ)")
+    @info("σ = $(σ)")
+    @info("R = $(R)")
+    @info("restartfreq = $(restartfreq)")
 
     # Algorithm 2 from the paper
 
@@ -32,11 +37,10 @@ function iclr_lazy_restart_x_y(
     # Log initial measure
     starttime = time()
     results = Results()
-    init_norm_const = norm((x0' * A_T)' - b)
-    init_fvalue = c' * x0
-    logresult!(results, 1, 0.0, init_fvalue, init_norm_const)
+    init_fvaluegap, init_metricLP = compute_fvaluegap_metricLP(x0, y0, problem)
+    logresult!(results, 1, 0.0, init_fvaluegap, init_metricLP)
 
-    outer_k = 2
+    outer_k = 1
     exitflag = false
 
     while !exitflag
@@ -54,7 +58,7 @@ function iclr_lazy_restart_x_y(
         θ_x = ones(Int, length(x0))
         θ_y = ones(Int, length(y0))
 
-        k = 2
+        k = 1
         restartflag = false
         while !exitflag && !restartflag
             # Line 4
@@ -74,16 +78,14 @@ function iclr_lazy_restart_x_y(
             # Line 7 & 12
             sliced_A_T = sliced_A_Ts[j]
             Delta_y = γ * m * a * ((x_hat' * sliced_A_T)' - b[blocks[j]])
-            y_tilde[blocks[j]] = y_tilde[blocks[j]] + a * (k .- θ_y[blocks[j]]) .* y[blocks[j]]
-            y_tilde[blocks[j]] = y_tilde[blocks[j]] + (m-1) * a * Delta_y[:]
-            y[blocks[j]] = y[blocks[j]] + Delta_y
 
-            # Line 8
-            pre_a = a
+            y_tilde[blocks[j]] = y_tilde[blocks[j]] + a * (k .- θ_y[blocks[j]]) .* y[blocks[j]]+ (m-1) * a * Delta_y[:]
+
+            y[blocks[j]] = y[blocks[j]] + Delta_y
 
             # Line 10
             Delta_Delta_y = sliced_A_T * Delta_y
-            q[C[j]] = q_sliced + a * (k .- θ_x[C[j]]) .* z_sliced + (a + m * pre_a) * Delta_Delta_y
+            q[C[j]] = q_sliced + a * ((k+1) .- θ_x[C[j]]) .* z_sliced + (m+1) * a * Delta_Delta_y
 
             # Line 11
             x_tilde[C[j]] = x_tilde[C[j]] + a * (k .- θ_x[C[j]]) .* x[C[j]]
@@ -92,7 +94,7 @@ function iclr_lazy_restart_x_y(
             z[C[j]] = z[C[j]] + Delta_Delta_y
 
             # Line 13
-            x[C[j]] =  prox(x0[C[j]] - 1/γ * q[C[j]], 1/γ * k * a)
+            x[C[j]] =  prox(x0[C[j]] - 1/γ * q[C[j]], 1/γ * (k+1) * a)
 
             # Line 14
             θ_x[C[j]] .= k
@@ -103,29 +105,32 @@ function iclr_lazy_restart_x_y(
             if outer_k % (exitcriterion.loggingfreq * m) == 0
                 x_tilde_tmp = x_tilde[:] + a * ((k+1) .- θ_x[:]) .* x[:]
                 y_tilde_tmp = y_tilde[:] + a * ((k+1) .- θ_y[:]) .* y[:]
-                x_out = x_tilde_tmp / (a * (k-1))
-                y_out = y_tilde_tmp / (a * (k-1))
-                norm_const = norm((x_out' * A_T)' - b)
-                func_value = c' * x_out
+                x_out = x_tilde_tmp / (a * k)
+                y_out = y_tilde_tmp / (a * k)
+
+                # Progress measures
+                fvaluegap, metricLP = compute_fvaluegap_metricLP(x_out, y_out, problem)
 
                 elapsedtime = time() - starttime
                 # @info "elapsedtime: $elapsedtime"
-                # @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
-                logresult!(results, outer_k, elapsedtime, func_value, norm_const)
+                # @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
+                elapsedtime = time() - starttime
+                logresult!(results, outer_k, elapsedtime, fvaluegap, metricLP)
 
-                exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, norm_const)
+                exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, metricLP)
                 if exitflag
                     break
                 end
-
-                if norm_const < 0.5 * init_norm_const
+                
+                if k >= restartfreq * m || (restartfreq == Inf && metricLP <= 0.5 * init_metricLP)
                     @info "<===== RESTARTING"
                     @info "k ÷ m: $(k ÷ m)"
                     @info "elapsedtime: $elapsedtime"
-                    @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
+                    @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
 
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)
-                    init_norm_const = norm_const
+                    init_fvaluegap = fvaluegap
+                    init_metricLP = metricLP
                     restartflag = true
                     break
                 end

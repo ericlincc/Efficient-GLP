@@ -1,9 +1,13 @@
+
 function pdhg_restart_x_y(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
-    L=10)
+    γ=1.0, L=10, restartfreq=Inf)
 
     @info("Running pdhg_restart_x_y...")
+    @info("γ = $(γ)")
+    @info("L = $(L)")
+    @info("restartfreq = $(restartfreq)")
 
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
@@ -11,29 +15,29 @@ function pdhg_restart_x_y(
     d, n = size(A_T)
     x0 = zeros(d)
     y0 = zeros(n)
+    m = 1
 
     ##### Start of pdhg_restart
 
     # Log initial measure
     starttime = time()
     results = Results()
-    init_norm_const = norm((x0' * A_T)' - b)
-    init_fvalue = c' * x0
-    logresult!(results, 1, 0.0, init_fvalue, init_norm_const)
+    init_fvaluegap, init_metricLP = compute_fvaluegap_metricLP(x0, y0, problem)
+    logresult!(results, 1, 0.0, init_fvaluegap, init_metricLP)
 
-    outer_k = 2
+    outer_k = 1
     exitflag = false
 
     while !exitflag
         # Init of PDHG
-        τ, σ =  1.0 / L , 1.0 / L
+        τ, σ =  1.0 / (γ * L), 1.0 * γ / L
         x_bar = deepcopy(x0)
         x = deepcopy(x0)
         y = deepcopy(y0)
         x_tilde = zero(x0)
         y_tilde = zero(y0)
 
-        k = 2
+        k = 1
         restartflag = false
         while !exitflag && !restartflag
 
@@ -51,25 +55,30 @@ function pdhg_restart_x_y(
             if outer_k % exitcriterion.loggingfreq == 0
                 x_out = x_tilde / (k - 1)
                 y_out = y_tilde / (k - 1)
-                norm_const = norm((x_out' * A_T)' - b)
-                func_value = c' * x_out
+                
+                # Progress measures
+                fvaluegap, metricLP = compute_fvaluegap_metricLP(x_out, y_out, problem)
 
                 elapsedtime = time() - starttime
-                @info "elapsedtime: $elapsedtime"
-                @info "outer_k: $(outer_k), constraint norm: $norm_const, func value: $func_value"
-                logresult!(results, outer_k, elapsedtime, func_value, norm_const)
+                # @info "elapsedtime: $elapsedtime"
+                # @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
+                elapsedtime = time() - starttime
+                logresult!(results, outer_k, elapsedtime, fvaluegap, metricLP)
 
-                exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, norm_const)
+                exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, metricLP)
                 if exitflag
                     break
                 end
 
-                if norm_const < 0.5 * init_norm_const
+                if k >= restartfreq * m || (restartfreq == Inf && metricLP <= 0.5 * init_metricLP)
                     @info "<===== RESTARTING"
-                    @info "k: $(k)"
-                    
+                    @info "k ÷ m: $(k ÷ m)"
+                    @info "elapsedtime: $elapsedtime"
+                    @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
+
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)
-                    init_norm_const = norm_const
+                    init_fvaluegap = fvaluegap
+                    init_metricLP = metricLP
                     restartflag = true
                     break
                 end
