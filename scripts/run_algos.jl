@@ -50,8 +50,8 @@ L = svds(A_T, nsv = 1)[1].S[1]
 
 # Exit criterion
 maxiter = 1e12
-maxtime = 3600.
-targetaccuracy = 1e-7   
+maxtime = 3600 * 12
+targetaccuracy = 1e-7
 loggingfreq = 5
 exitcriterion = ExitCriterion(maxiter, maxtime, targetaccuracy, loggingfreq)
 
@@ -62,7 +62,7 @@ R = sqrt(blocksize)
 restartfreq = Inf  # For restart when metric halves, set restartfreq=Inf 
 
 timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS-sss")
-loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-$(join(ARGS[3:end], "_"))-execution_log.txt"
+loggingfilename = "$(outputdir)/$(dataset)-$(join(ARGS[3:end], "_"))-execution_log-$(timestamp).txt"
 io = open(loggingfilename, "w+")
 logger = SimpleLogger(io)
 
@@ -105,9 +105,10 @@ with_logger(logger) do
             R=R * iclr_R_multiplier,
             γ=γ,
             restartfreq=restartfreq,
+            io=io,
         )
 
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-iclr_lazy_restart_x_y.csv"
+        export_filename = "$(outputdir)/$(dataset)-iclr_lazy_restart_x_y-$(timestamp).csv"
         exportresultstoCSV(r_iclr_lazy_restart, export_filename)
 
         println("========================================")
@@ -127,9 +128,10 @@ with_logger(logger) do
             L=L * pdhg_L_multiplier,
             γ=γ,
             restartfreq=restartfreq,
+            io=io,
         )
 
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-pdhg_restart_x_y.csv"
+        export_filename = "$(outputdir)/$(dataset)-pdhg_restart_x_y-$(timestamp).csv"
         exportresultstoCSV(r_pdhg_restart, export_filename)
 
         println("========================================")
@@ -150,9 +152,10 @@ with_logger(logger) do
             R=R * spdhg_R_multiplier,
             γ=γ,
             restartfreq=restartfreq,
+            io=io,
         )
 
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-spdhg_restart_x_y.csv"
+        export_filename = "$(outputdir)/$(dataset)-spdhg_restart_x_y-$(timestamp).csv"
         exportresultstoCSV(r_spdhg_restart, export_filename)
 
         println("========================================")
@@ -173,9 +176,10 @@ with_logger(logger) do
             R=R * purecd_R_multiplier,
             γ=γ,
             restartfreq=restartfreq,
+            io=io,
         )
 
-        export_filename = "$(outputdir)/$(timestamp)-$(dataset)-purecd_restart_x_y.csv"
+        export_filename = "$(outputdir)/$(dataset)-purecd_restart_x_y-$(timestamp).csv"
         exportresultstoCSV(r_purecd_restart, export_filename)
 
         println("========================================")

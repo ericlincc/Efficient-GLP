@@ -2,7 +2,8 @@
 function purecd_restart_x_y(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
-    γ=1.0, σ=0.0, R=10, blocksize=10, restartfreq=Inf)
+    γ=1.0, σ=0.0, R=10, blocksize=10, restartfreq=Inf,
+    io=nothing)
 
     @info("Running pure_cd_restart_x_y...")
     @info("blocksize = $(blocksize)")
@@ -10,6 +11,9 @@ function purecd_restart_x_y(
     @info("σ = $(σ)")
     @info("R = $(R)")
     @info("restartfreq = $(restartfreq)")
+    if !isnothing(io)
+        flush(io)
+    end
 
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
@@ -90,10 +94,13 @@ function purecd_restart_x_y(
                 fvaluegap, metricLP = compute_fvaluegap_metricLP(x_out, y_out, problem)
 
                 elapsedtime = time() - starttime
-                # @info "elapsedtime: $elapsedtime"
-                # @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
+                @info "elapsedtime: $elapsedtime"
+                @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
                 elapsedtime = time() - starttime
                 logresult!(results, outer_k, elapsedtime, fvaluegap, metricLP)
+                if !isnothing(io)
+                    flush(io)
+                end
 
                 exitflag = checkexitcondition(exitcriterion, outer_k, elapsedtime, metricLP)
                 if exitflag
@@ -105,12 +112,19 @@ function purecd_restart_x_y(
                     @info "k ÷ m: $(k ÷ m)"
                     @info "elapsedtime: $elapsedtime"
                     @info "outer_k: $(outer_k), fvaluegap: $(fvaluegap), metricLP: $(metricLP)"
+                    if !isnothing(io)
+                        flush(io)
+                    end
 
                     x0, y0 = deepcopy(x_out), deepcopy(y_out)
                     init_fvaluegap = fvaluegap
                     init_metricLP = metricLP
                     restartflag = true
                     break
+                end
+
+                if !isnothing(io)
+                    flush(io)
                 end
             end
 
