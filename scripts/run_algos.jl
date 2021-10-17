@@ -51,7 +51,7 @@ L = svds(A_T, nsv = 1)[1].S[1]
 # Exit criterion
 maxiter = 1e12
 maxtime = 3600.
-targetaccuracy = 1e-7
+targetaccuracy = 1e-7   
 loggingfreq = 5
 exitcriterion = ExitCriterion(maxiter, maxtime, targetaccuracy, loggingfreq)
 
@@ -61,7 +61,7 @@ R = sqrt(blocksize)
 γ = parse(Float64, ARGS[2])  # TODO: Use ArgParse
 restartfreq = Inf  # For restart when metric halves, set restartfreq=Inf 
 
-timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS")
+timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS-sss")
 loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-$(join(ARGS[3:end], "_"))-execution_log.txt"
 io = open(loggingfilename, "w+")
 logger = SimpleLogger(io)
