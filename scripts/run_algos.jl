@@ -40,29 +40,29 @@ filepath = "./data/$(dataset).txt"
 
 # Problem instance parameters
 κ = 0.1
-ρ = 0.1
+ρ = 10.
 
 # Problem instance instantiation
 yX_T = read_libsvm_into_yXT_sparse(filepath, dim_dataset, num_dataset)
-A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, 1.0, 0.1)
+A_T, b, c = droreformuation_wmetric_hinge_standardformnormalized(yX_T, κ, ρ)
 problem = StandardLinearProgram(A_T, b, c)
 L = svds(A_T, nsv = 1)[1].S[1]
 
 # Exit criterion
 maxiter = 1e12
 maxtime = 3600.
-targetaccuracy = 1
+targetaccuracy = 1e-7
 loggingfreq = 5
 exitcriterion = ExitCriterion(maxiter, maxtime, targetaccuracy, loggingfreq)
 
 # Common algo parameters
 blocksize = 50
 R = sqrt(blocksize)
-γ = 0.0001
+γ = parse(Float64, ARGS[2])  # TODO: Use ArgParse
 restartfreq = Inf  # For restart when metric halves, set restartfreq=Inf 
 
 timestamp = Dates.format(Dates.now(), "yyyy-mm-dd_HH-MM-SS")
-loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-execution_log.txt"
+loggingfilename = "$(outputdir)/$(timestamp)-$(dataset)-$(join(ARGS[3:end], "_"))-execution_log.txt"
 io = open(loggingfilename, "w+")
 logger = SimpleLogger(io)
 
@@ -91,11 +91,11 @@ with_logger(logger) do
     @info "γ = $(γ)"
     @info "restartfreq = $(restartfreq)"
 
-    if "1" in ARGS[2:end]  # TODO: Use algo names instead
+    if "1" in ARGS[3:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running iclr_lazy_restart_x_y.")
 
-        iclr_R_multiplier = 0.9
+        iclr_R_multiplier = 1.0
         println("iclr_R_multiplier = $(iclr_R_multiplier)")
 
         r_iclr_lazy_restart = iclr_lazy_restart_x_y(
@@ -104,7 +104,7 @@ with_logger(logger) do
             blocksize=blocksize,
             R=R * iclr_R_multiplier,
             γ=γ,
-            restartfreq=restartfreq
+            restartfreq=restartfreq,
         )
 
         export_filename = "$(outputdir)/$(timestamp)-$(dataset)-iclr_lazy_restart_x_y.csv"
@@ -114,11 +114,11 @@ with_logger(logger) do
     end
 
 
-    if "2" in ARGS[2:end]  # TODO: Use algo names instead
+    if "2" in ARGS[3:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running pdhg_restart_x_y.")
 
-        pdhg_L_multiplier = 0.9
+        pdhg_L_multiplier = 1.0
         println("pdhg_L_multiplier = $(pdhg_L_multiplier)")
 
         r_pdhg_restart = pdhg_restart_x_y(
@@ -136,11 +136,11 @@ with_logger(logger) do
     end
 
 
-    if "3" in ARGS[2:end]  # TODO: Use algo names instead
+    if "3" in ARGS[3:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running spdhg_restart_x_y.")
 
-        spdhg_R_multiplier = 0.9
+        spdhg_R_multiplier = 1.0
         println("spdhg_R_multiplier = $(spdhg_R_multiplier)")
 
         r_spdhg_restart = spdhg_restart_x_y(
@@ -149,7 +149,7 @@ with_logger(logger) do
             blocksize=blocksize,
             R=R * spdhg_R_multiplier,
             γ=γ,
-            restartfreq=restartfreq
+            restartfreq=restartfreq,
         )
 
         export_filename = "$(outputdir)/$(timestamp)-$(dataset)-spdhg_restart_x_y.csv"
@@ -159,7 +159,7 @@ with_logger(logger) do
     end
 
 
-    if "4" in ARGS[2:end]  # TODO: Use algo names instead
+    if "4" in ARGS[3:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running purecd_restart_x_y.")
 
@@ -172,7 +172,7 @@ with_logger(logger) do
             blocksize=blocksize,
             R=R * purecd_R_multiplier,
             γ=γ,
-            restartfreq=restartfreq
+            restartfreq=restartfreq,
         )
 
         export_filename = "$(outputdir)/$(timestamp)-$(dataset)-purecd_restart_x_y.csv"
