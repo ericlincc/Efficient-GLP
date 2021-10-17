@@ -55,3 +55,15 @@ function compute_fvaluegap_metricLP(x_out::Vector, y_out::Vector, problem::Stand
     
     norm5, sqrt(norm1^2 + norm2^2 + norm3^2 + norm4^2 + norm5^2)
 end
+
+
+function nnz_per_row(A_T::SparseMatrixCSC)
+    ret = zeros(Int, size(A_T)[1])
+    rows, columns, values = findnz(A_T)
+    for (r, c, v) in zip(rows, columns, values)
+        if !isapprox(v, 0.)
+            ret[r] += 1
+        end
+    end
+    return ret
+end

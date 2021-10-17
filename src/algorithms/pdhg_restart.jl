@@ -57,8 +57,8 @@ function pdhg_restart_x_y(
             # Logging and checking exit condition
             # set restartflag when reached some measure
             if outer_k % exitcriterion.loggingfreq == 0
-                x_out = x_tilde / (k - 1)
-                y_out = y_tilde / (k - 1)
+                x_out = x_tilde / k
+                y_out = y_tilde / k
                 
                 # Progress measures
                 fvaluegap, metricLP = compute_fvaluegap_metricLP(x_out, y_out, problem)
