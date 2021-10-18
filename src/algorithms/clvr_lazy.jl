@@ -9,7 +9,7 @@
 # TODO: Update the above comments
 
 
-function iclr_lazy(
+function clvr_lazy(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
     γ=1.0, σ=0.0, R=10, blocksize=10)  # TODO: What is γ and σ?
@@ -31,9 +31,9 @@ function iclr_lazy(
     _time2 = time()
     @info ("Initialization time = ", _time2 - _time1)
 
-    ##### Start of iclr_lazy #####
+    ##### Start of clvr_lazy #####
 
-    # Init of ICLR_Lazy
+    # Init of CLVR Lazy
     K = exitcriterion.maxiter  #
     m = length(blocks)
     a = 1/(R * m)

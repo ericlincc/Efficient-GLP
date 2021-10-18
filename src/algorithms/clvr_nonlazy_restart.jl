@@ -1,10 +1,10 @@
 
-function iclr_nonlazy_restart_x_y(
+function clvr_nonlazy_restart_x_y(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
     γ=1.0, σ=0.0, R=10, blocksize=10)
 
-    @info("Running iclr_nonlazy_restart_x_y...")
+    @info("Running clvr_nonlazy_restart_x_y...")
 
     # Algorithm 1 from the paper
 
@@ -21,7 +21,7 @@ function iclr_nonlazy_restart_x_y(
     _time2 = time()
     @info ("Initialization time = ", _time2 - _time1)
 
-    ##### Start of iclr_nonlazy_restart_x_y
+    ##### Start of clvr_nonlazy_restart_x_y
 
     m = length(blocks)
 
@@ -36,7 +36,7 @@ function iclr_nonlazy_restart_x_y(
     exitflag = false
 
     while !exitflag
-        # Init of ICLR_Nonlazy
+        # Init of CLVR nonlazy
         a = 1 / (R * m)
         A = a
         pre_a, pre_A = 0.0, 0.0

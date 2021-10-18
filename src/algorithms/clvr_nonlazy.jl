@@ -1,10 +1,10 @@
 
-function iclr_nonlazy(
+function clvr_nonlazy(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
     γ=1.0, σ=0.0, R=10, blocksize=10)
 
-    @info("Running iclr...")
+    @info("Running clvr...")
 
     A_T, b, c = problem.A_T, problem.b, problem.c
     prox = problem.prox
@@ -18,9 +18,9 @@ function iclr_nonlazy(
     @info ("Initialization time = ", _time2 - _time1)
 
 
-    ##### Start of iclr #####
+    ##### Start of clvr #####
 
-    # Init of ICLR_Nonlazy
+    # Init of CLVR_Nonlazy
 
     m = length(blocks)
     a = 1 / (R * m)

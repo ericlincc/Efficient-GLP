@@ -1,11 +1,11 @@
 
-function iclr_lazy_restart_x_y(
+function clvr_lazy_restart_x_y(
     problem::StandardLinearProgram,
     exitcriterion::ExitCriterion;
     γ=1.0, σ=0.0, R=10, blocksize=10, restartfreq=Inf,
     io=nothing)
 
-    @info("Running iclr_lazy_restart_x_y with")
+    @info("Running clvr_lazy_restart_x_y with")
     @info("blocksize = $(blocksize)")
     @info("γ = $(γ)")
     @info("σ = $(σ)")
@@ -34,7 +34,7 @@ function iclr_lazy_restart_x_y(
     _time2 = time()
     @info ("Initialization time = ", _time2 - _time1)
 
-    ##### Start of iclr_lazy_restart_x_y
+    ##### Start of clvr_lazy_restart_x_y
 
     m = length(blocks)
 
@@ -48,7 +48,7 @@ function iclr_lazy_restart_x_y(
     exitflag = false
 
     while !exitflag
-        # Init of ICLR_Lazy
+        # Init of CLVR Lazy
         a = 1 / (R * m)
         pre_a = a
         idx_seq = 1:m

@@ -11,11 +11,11 @@ include("../src/problems/standardLP.jl")
 include("../src/algorithms/utils/exitcriterion.jl")
 include("../src/algorithms/utils/results.jl")
 include("../src/algorithms/utils/helper.jl")
-include("../src/algorithms/iclr_lazy.jl")
+include("../src/algorithms/clvr_lazy.jl")
 include("../src/problems/dro/utils/libsvm_parser.jl")
 include("../src/problems/dro/wasserstein.jl")
 
-include("../src/algorithms/iclr_lazy_restart.jl")
+include("../src/algorithms/clvr_lazy_restart.jl")
 include("../src/algorithms/pdhg_restart.jl")
 include("../src/algorithms/purecd_restart.jl")
 include("../src/algorithms/spdhg_restart.jl")
@@ -93,23 +93,23 @@ with_logger(logger) do
 
     if "1" in ARGS[3:end]  # TODO: Use algo names instead
         println("========================================")
-        println("Running iclr_lazy_restart_x_y.")
+        println("Running clvr_lazy_restart_x_y.")
 
-        iclr_R_multiplier = 1.0
-        println("iclr_R_multiplier = $(iclr_R_multiplier)")
+        clvr_R_multiplier = 1.0
+        println("clvr_R_multiplier = $(clvr_R_multiplier)")
 
-        r_iclr_lazy_restart = iclr_lazy_restart_x_y(
+        r_clvr_lazy_restart = clvr_lazy_restart_x_y(
             problem,
             exitcriterion;
             blocksize=blocksize,
-            R=R * iclr_R_multiplier,
+            R=R * clvr_R_multiplier,
             γ=γ,
             restartfreq=restartfreq,
             io=io,
         )
 
-        export_filename = "$(outputdir)/$(dataset)-iclr_lazy_restart_x_y-$(timestamp).csv"
-        exportresultstoCSV(r_iclr_lazy_restart, export_filename)
+        export_filename = "$(outputdir)/$(dataset)-clvr_lazy_restart_x_y-$(timestamp).csv"
+        exportresultstoCSV(r_clvr_lazy_restart, export_filename)
 
         println("========================================")
     end
