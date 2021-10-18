@@ -5,6 +5,8 @@ function droreformuation_wmetric_hinge_standardformnormalized(
     κ::Float64,
     ρ::Float64
 )
+    # Reformulate a R-DRO problem with Wasserstein-metric based ambiguity set into a standard form LP.
+
     dim_dataset, num_dataset = size(yX_T)
 
     v1_n_T = transpose(sparse(ones(num_dataset)))

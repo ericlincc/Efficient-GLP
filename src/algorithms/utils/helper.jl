@@ -58,9 +58,11 @@ end
 
 
 function nnz_per_row(A_T::SparseMatrixCSC)
+    # Compute number of nonzero elements of each row in a sparse column matrix.
+    
     ret = zeros(Int, size(A_T)[1])
-    rows, columns, values = findnz(A_T)
-    for (r, c, v) in zip(rows, columns, values)
+    rows, _, values = findnz(A_T)
+    for (r, v) in zip(rows, values)
         if !isapprox(v, 0.)
             ret[r] += 1
         end

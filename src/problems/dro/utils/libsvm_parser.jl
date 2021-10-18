@@ -1,6 +1,6 @@
 
-
 function read_libsvm_into_yXT_sparse(filepath::String, dim_dataset::Int, num_dataset::Int)
+    # Read a libsvm binary dataset into a sparse data matrix transposed (i.e. y *. X^T).
     
     train_indices = Array{Int}([])
     feature_indices = Array{Int}([])
@@ -32,5 +32,5 @@ function read_libsvm_into_yXT_sparse(filepath::String, dim_dataset::Int, num_dat
         end
     end
 
-    yX_T = sparse(feature_indices, train_indices, values, dim_dataset, num_dataset)
+    sparse(feature_indices, train_indices, values, dim_dataset, num_dataset)
 end

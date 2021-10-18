@@ -1,5 +1,7 @@
 
 function csv_to_results(filepath)
+    # Read results CSV file into a Results object.
+
     csv_reader = CSV.File(filepath)
 
     results = Results()

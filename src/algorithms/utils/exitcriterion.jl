@@ -1,4 +1,6 @@
 struct ExitCriterion
+    # A data structure to store exit conditions.
+
     maxiter::Int              # Max #iterations allowed
     maxtime::Float64          # Max execution time allowed
     targetaccuracy::Float64   # Target accuracy to halt algorithm
@@ -6,13 +8,13 @@ struct ExitCriterion
 end
 
 
-# A function determine if it's time to halt execution
 function checkexitcondition(
     exitcriterion::ExitCriterion,
     currentiter::Integer,
     elapsedtime,
     measure,
 )::Bool
+    # A function determine if it's time to halt execution
 
     if currentiter >= exitcriterion.maxiter
         return true
