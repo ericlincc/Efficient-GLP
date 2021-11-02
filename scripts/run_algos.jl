@@ -1,3 +1,5 @@
+# julia scripts/run_algo.jl <dataset> <gamma> <algo1>...<algo4>
+
 using Arpack
 using CSV
 using Dates
@@ -91,6 +93,29 @@ with_logger(logger) do
     @info "γ = $(γ)"
     @info "restartfreq = $(restartfreq)"
 
+    if "0" in ARGS[3:end]  # TODO: Use algo names instead
+        println("========================================")
+        println("Running clvr_lazy_restart_x_y with blocksize=1.")
+
+        println("clvr_blocksize = 1")
+        println("clvr_R = 1.")
+
+        r_clvr_lazy_restart = clvr_lazy_restart_x_y(
+            problem,
+            exitcriterion;
+            blocksize=1,
+            R=1.,
+            γ=γ,
+            restartfreq=restartfreq,
+            io=io,
+        )
+
+        export_filename = "$(outputdir)/$(dataset)-clvr_lazy_restart_x_y-blocksize=1-R=1-$(timestamp).csv"
+        exportresultstoCSV(r_clvr_lazy_restart, export_filename)
+
+        println("========================================")
+    end
+
     if "1" in ARGS[3:end]  # TODO: Use algo names instead
         println("========================================")
         println("Running clvr_lazy_restart_x_y.")
@@ -166,14 +191,14 @@ with_logger(logger) do
         println("========================================")
         println("Running purecd_restart_x_y.")
 
-        purecd_R_multiplier = 5.0
-        println("purecd_R_multiplier = $(purecd_R_multiplier)")
+        println("purecd_blocksize = 1")
+        println("purecd_R = 1")
 
         r_purecd_restart = purecd_restart_x_y(
             problem,
             exitcriterion;
-            blocksize=blocksize,
-            R=R * purecd_R_multiplier,
+            blocksize=1,
+            R=1,
             γ=γ,
             restartfreq=restartfreq,
             io=io,

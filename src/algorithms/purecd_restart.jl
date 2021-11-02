@@ -25,6 +25,7 @@ function purecd_restart_x_y(
     _time1 = time()
     # Precomputing blocks, nzrows, sliced_A_T
     blocks, C = compute_nzrows_for_blocks(A_T, blocksize)
+    num_nnz = nnz_per_row(A_T)
     sliced_A_Ts = Array{SparseMatrixCSC{Float64, Int}}([])
     for j in 1:length(C)
         push!(sliced_A_Ts, A_T[C[j], blocks[j]])
@@ -40,6 +41,8 @@ function purecd_restart_x_y(
     starttime = time()
     results = Results()
     init_fvaluegap, init_metricLP = compute_fvaluegap_metricLP(x0, y0, problem)
+    @info "init_metricLP: $(init_metricLP)" 
+
     logresult!(results, 1, 0.0, init_fvaluegap, init_metricLP)
 
     outer_k = 1
@@ -47,7 +50,7 @@ function purecd_restart_x_y(
 
     while !exitflag
         # Init of PURE_CD
-        τ, σ =  1.0 / (γ * m * R) , 1.0 * γ / R
+        τ, σ =  0.99 /(γ *  R) , 0.99 * γ/ R
         idx_seq = 1:m
 
         x = deepcopy(x0)
@@ -69,7 +72,7 @@ function purecd_restart_x_y(
             y_tilde[blocks[j]] = y_tilde[blocks[j]] +  (k.- θ_y[blocks[j]]) .* y[blocks[j]]
 
 
-            x_bar[C[j]] = x[C[j]] - τ * (z[C[j]] + c[C[j]])
+            x_bar[C[j]] = x[C[j]] - (τ ./ num_nnz[C[j]]) .* (z[C[j]] + c[C[j]])
             x_bar[C[j]] = prox(x_bar[C[j]], τ)
 
             sliced_A_T = sliced_A_Ts[j]
@@ -77,7 +80,7 @@ function purecd_restart_x_y(
             y[blocks[j]] = y[blocks[j]] + Delta_y[:]
             tmp = sliced_A_T * Delta_y
             z[C[j]] = z[C[j]] + tmp[:]
-            x[C[j]] = x_bar[C[j]] - τ * m / length(C[j]) * tmp[:]
+            x[C[j]] = x_bar[C[j]] -  τ .* tmp[:]
 
             θ_x[C[j]] .= k
             θ_y[blocks[j]] .= k
@@ -106,7 +109,7 @@ function purecd_restart_x_y(
                 if exitflag
                     break
                 end
-                
+
                 if k >= restartfreq * m || (restartfreq == Inf && metricLP <= 0.5 * init_metricLP)
                     @info "<===== RESTARTING"
                     @info "k ÷ m: $(k ÷ m)"
