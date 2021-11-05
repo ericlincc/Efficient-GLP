@@ -1,3 +1,12 @@
+# This file contains the ExitCriterion struct's definition and its dispatches.
+
+"""
+Defines the exit criterion of each algorithm run.
+* maxiter: Max #iterations allowed
+* maxtime: Max execution time allowed
+* targetaccuracy: Target accuracy to halt algorithm
+* loggingfreq: #datapass between logging
+"""
 struct ExitCriterion
     # A data structure to store exit conditions.
 
@@ -7,7 +16,9 @@ struct ExitCriterion
     loggingfreq::Int          # #datapass between logging
 end
 
-
+"""
+Check if the given exit criterion has been satisfied. Returns true if satisfied else returns false.
+"""
 function checkexitcondition(
     exitcriterion::ExitCriterion,
     currentiter::Integer,

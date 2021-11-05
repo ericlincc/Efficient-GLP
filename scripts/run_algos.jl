@@ -1,3 +1,5 @@
+# Script for executing algorithms on selected datasets on the DRO problem with Wasserstein metric
+# based ambiguity sets. Command line usage:
 # julia scripts/run_algo.jl <dataset> <gamma> <algo1>...<algo4>
 
 using Arpack

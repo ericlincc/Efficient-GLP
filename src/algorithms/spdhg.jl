@@ -1,43 +1,4 @@
 
-# using LinearAlgebra
-# # the problem to optimize
-# #  \min_{\vx\in\gX\subset\sR^d} \max_{\vy\in\sR^n} \Big\{ L(\vx,\vy) = \vc^T\vx + r(\vx)   + \vy^T\mA\vx   - \vy^T\vb\Big\}.
-# # op_X_r: (I + tau_n ∂G)^{-1}
-# # γ: strong convexity
-# # σ, τ, θ: sequence for update
-# # L: Lipschitz constant
-
-# # to be consistent with the sparse column format, we consider
-# # D: R^{d×n}
-# function test_spdhg()
-
-#     n, d = 1000, 500
-#     γ = 0.0
-#     D = (randn(d, n) +  ones(d, n)) /√n
-#     # b = randn(n)
-#     x_star = ones(d)
-#     b = (x_star' * D)'
-#     c = ones(d)
-#     R = 1.0
-
-#     K = 100000
-#     x0 = zeros(d)
-#     y0 = zeros(n)
-#     blocks = []
-#     bs = 1
-#     len_b = n ÷ bs
-#     for i = 1:len_b
-#         push!(blocks, (1 + (i-1) * bs): (i * bs))
-#     end
-#     τ, σ =  1.0 / (R * len_b), 1.0 / R
-#     op_X_r(x, τ) = max.(x, 0.0)
-#     spdhg(D, b, c, op_X_r, x0, y0, n, d, γ, σ, τ, R, blocks, K * len_b)
-# end
-
-# # blocks: the separation of dual variables
-# # R: row norm
-
-
 # TODO: THIS IS UNTESTED
 function spdhg(
     problem::StandardLinearProgram,
@@ -58,7 +19,7 @@ function spdhg(
 
     x0 = zeros(d)
     y0 = zeros(n)
-    z = zero(x0)  # TODO: Why not just zeros(d)?
+    z = zero(x0)
     grad = zero(x0)
     x_tilde = zero(x0)
     x = deepcopy(x0)

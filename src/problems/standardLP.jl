@@ -1,5 +1,5 @@
+"""Data structure for formalizing a standard-form linear program."""
 struct StandardLinearProgram
-    # Data structure for formalizing a standard-form linear program.
 
     A_T::SparseMatrixCSC{Float64, Int64}
     b::Vector{Float64}

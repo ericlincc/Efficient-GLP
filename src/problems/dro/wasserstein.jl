@@ -1,11 +1,12 @@
-# Standard form without prox operator
-
+"""
+Reformulate a R-DRO problem with Wasserstein-metric based ambiguity set into a standard form LP.
+See Appendix C in the CLVR paper.
+"""
 function droreformuation_wmetric_hinge_standardformnormalized(
     yX_T::SparseMatrixCSC{Float64, Int},
     κ::Float64,
     ρ::Float64
 )
-    # Reformulate a R-DRO problem with Wasserstein-metric based ambiguity set into a standard form LP.
 
     dim_dataset, num_dataset = size(yX_T)
 

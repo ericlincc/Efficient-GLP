@@ -1,4 +1,5 @@
-# Run command
+# Script for executing Gurobi on selected datasets on the DRO problem with Wasserstein metric
+# based ambiguity sets. Command line usage:
 # julia run_solver.jl <dataset> <method>
 # method: -1=automatic, 0=primal simplex, 1=dual simplex, 2=barrier, 3=concurrent, 4=deterministic concurrent, 5=deterministic concurrent simplex.
 

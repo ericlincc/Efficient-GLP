@@ -1,9 +1,9 @@
 # File containing helper functions for algorithms.
 
+""" Compute the nonzero rows in A_T for each block."""
 function compute_nzrows_for_blocks(A_T::SparseMatrixCSC, blocksize::Int)
-    # Compute the nonzero rows in A_T for each block.
 
-    d, n = size(A_T)
+    _, n = size(A_T)
 
     blocks = Array{UnitRange{Int}}([])
     C = Array{Vector{Int}}([])
@@ -28,8 +28,8 @@ function compute_nzrows_for_blocks(A_T::SparseMatrixCSC, blocksize::Int)
 end
 
 
+"""Export results into CSV formatted file."""
 function exportresultstoCSV(results::Results, outputfile::String)
-    # Export results into CSV formatted file.
 
     CSV.write(
         outputfile, (
@@ -42,8 +42,8 @@ function exportresultstoCSV(results::Results, outputfile::String)
 end
 
 
+"""Computing a common metric for LP. See Eqn (20) in Applegate et al 2020."""
 function compute_fvaluegap_metricLP(x_out::Vector, y_out::Vector, problem::StandardLinearProgram)
-    # Computing a common metric for LP. See Eqn (20) in Applegate et al 2020.
 
     A_T, b, c = problem.A_T, problem.b, problem.c
 
@@ -57,8 +57,8 @@ function compute_fvaluegap_metricLP(x_out::Vector, y_out::Vector, problem::Stand
 end
 
 
+"""Compute number of nonzero elements of each row in a sparse column matrix."""
 function nnz_per_row(A_T::SparseMatrixCSC)
-    # Compute number of nonzero elements of each row in a sparse column matrix.
     
     ret = zeros(Int, size(A_T)[1])
     rows, _, values = findnz(A_T)

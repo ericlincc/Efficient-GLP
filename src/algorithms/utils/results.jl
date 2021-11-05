@@ -1,6 +1,14 @@
-struct Results
-    # A data structure for storing execution results.
+# This file contains the Results struct's definition and its dispatches.
 
+
+"""
+Defines the progress of execution at each logging step.
+* iterations: Number of iterations elapsed.
+* times: Elapsed times since start of execution (in seconds).
+* fvaluegaps: Primal and dual objective value gaps.
+* metricLPs: The computed values of the LP metric.
+"""
+struct Results
     iterations::Vector{Float64}
     times::Vector{Float64}
     fvaluegaps::Vector{Float64}
@@ -11,8 +19,9 @@ struct Results
     end
 end
 
+
+"""Append execution measures to Results."""
 function logresult!(r::Results, currentiter, elapsedtime, fvaluegap, metricLP)
-    # Append execution measures to Results.
 
     push!(r.iterations, currentiter)
     push!(r.times, elapsedtime)
