@@ -1,3 +1,18 @@
+# Copyright 2021 The CLVR Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 # Script for executing algorithms on selected datasets on the DRO problem with Wasserstein metric
 # based ambiguity sets. Command line usage:
 # julia scripts/run_algo.jl <dataset> <gamma> <algo1>...<algo4>
@@ -15,7 +30,6 @@ include("../src/problems/standardLP.jl")
 include("../src/algorithms/utils/exitcriterion.jl")
 include("../src/algorithms/utils/results.jl")
 include("../src/algorithms/utils/helper.jl")
-include("../src/algorithms/clvr_lazy.jl")
 include("../src/problems/dro/utils/libsvm_parser.jl")
 include("../src/problems/dro/wasserstein.jl")
 
